@@ -1,7 +1,29 @@
 import re
+import datetime
+
+TIMESTAMP_FORMAT = '%d.%m.%Y %H:%M:%S'
 
 REGEX_PATTERN_TIMESTAMP = '^\/\/#! Time: ([\d|.| |:]*)'
 REGEX_PATTERN_TEST = '\/\/## ([A-z]*):[ ]*[.|/]*([A-z]*)'
+
+
+def findSubstringsStartingWith(string, partStartSequence):
+    """ This find substrings starting with the given sequence
+        (Non Overlapping)"""
+
+    parts = []
+
+    currentIndex = string.find(partStartSequence, 0)
+    nextIndex = string.find(partStartSequence, currentIndex+1)
+
+    while (nextIndex != -1):
+        parts.append(string[currentIndex:nextIndex])
+        currentIndex = nextIndex
+        nextIndex = string.find(partStartSequence, currentIndex+1)
+
+    # Last part is limited by EOF
+    parts.append(string[currentIndex:])
+    return parts
 
 
 class Datapoint(object):
@@ -26,12 +48,12 @@ class SpeedTest(Test):
         self.UploadMbits = float(
             re.search('Upload: (\d*\.?\d*) Mbit/s', tstString).group(1))
 
+
 class PingTest(Test):
     CoreCommand = "ping"
 
     def __init__(self, name, tstString):
         super().__init__(name)
-
 
         self.PercentPacketLoss = int(
             re.search('received, (\d*)% packet loss', tstString).group(1))
@@ -39,30 +61,12 @@ class PingTest(Test):
             self.PingAvgMs = float(
                 re.search('rtt min\/avg\/max\/mdev = \d*\.?\d*\/(\d*\.?\d*)\/\d*', tstString).group(1))
         else:
-            self.PingAvgMs = 10000.0 #Dummy Value for ping unsucessfull
+            self.PingAvgMs = 10000.0  # Dummy Value for ping unsucessfull
+
 
 availableTestTypes = {}
 availableTestTypes[SpeedTest.CoreCommand] = lambda n, s: SpeedTest(n, s)
 availableTestTypes[PingTest.CoreCommand] = lambda n, s: PingTest(n, s)
-
-
-def findSubstringsStartingWith(string, partStartSequence):
-    """ This find substrings starting with the given sequence
-        (Non Overlapping)"""
-
-    parts = []
-
-    currentIndex = string.find(partStartSequence, 0)
-    nextIndex = string.find(partStartSequence, currentIndex+1)
-
-    while (nextIndex != -1):
-        parts.append(string[currentIndex:nextIndex])
-        currentIndex = nextIndex
-        nextIndex = string.find(partStartSequence, currentIndex+1)
-
-    # Last part is limited by EOF
-    parts.append(string[currentIndex:])
-    return parts
 
 
 def parseTest(tstString):
@@ -78,7 +82,8 @@ def parseTest(tstString):
 
 
 def parseDatapoint(dpString):
-    timestamp = re.search(REGEX_PATTERN_TIMESTAMP, dpString).group(1)
+    timestampStr = re.search(REGEX_PATTERN_TIMESTAMP, dpString).group(1)
+    timestamp = datetime.datetime.strptime(timestampStr, TIMESTAMP_FORMAT)
 
     testStrings = findSubstringsStartingWith(dpString, '//##')
     tests = list(map(parseTest, testStrings))

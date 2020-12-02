@@ -20,7 +20,7 @@ def main():
     result += executeTest('PingGoogle', 'ping -c 4 google.de')
     result += executeTest('PingReddit', 'ping -c 4 reddit.com')
     result += executeTest('PingAmazon', 'ping -c 4 amazon.de')
-    result += executeTest('PingMicrosoft', 'ping -c 4 microsoft.com')
+    result += executeTest('PingYoutube', 'ping -c 4 youtube.com')
     result += executeTest('PingFacebook', 'ping -c 4 facebook.de')
     result += executeTest('PingOneOneOneOne', 'ping -c 4 1.1.1.1')
     result += executeTest('PingSteam', 'ping -c 4 steampowered.de')

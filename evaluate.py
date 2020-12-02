@@ -1,6 +1,9 @@
 import sys
 
-import evaluateLib
+import matplotlib.pyplot as plt
+
+import evaluateParseLib as evalParse
+import evaluateUtilLib as evalUtil
 
 
 def main():
@@ -14,9 +17,19 @@ def main():
         resultString = file.read()
 
     print('Parsing Results\n')
-    parsedResult = evaluateLib.parseResultString(resultString)
+    parsedResult = evalParse.parseResultString(resultString)
 
     print('Found {} Datapoints (Time based Records)\n'.format(len(parsedResult)))
+    print('Avgerage Download-Speed (Mbit/s): {}\n'.format(
+        evalUtil.calcAverageDownloadSpeed(parsedResult)))
+    print('Avgerage Upload-Speed (Mbit/s): {}\n'.format(evalUtil.calcAverageUploadSpeed(parsedResult)))
+
+    # Print Average Packet loss over Time
+    x = list(map(evalUtil.getTimeStampOfDatapoint, parsedResult))
+    y = list(map(evalUtil.calcAveragePacketlossPerDatapoint, parsedResult))
+
+    plt.plot(x, y)
+    plt.show()
 
 
 if __name__ == '__main__':
