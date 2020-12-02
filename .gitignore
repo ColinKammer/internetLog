@@ -1,2 +1,7 @@
+.vscode
++ .vscode/launch.json
+
+__pycache__
+
 results.txt
 speedtest.py
