@@ -199,7 +199,7 @@ namespace EvalCS
                 );
                 return result;
             }
-            if (pingString.Length <= "0.2345/7.899/2.345/7.89012".Length)
+            if (pingString.Length <= "012.2345/734.8993/243.3453/732.8901".Length)
             {
                 var averagePing = pingString.Split('/').ElementAt(1);
                 result.Add(new TestColumn($"{testName}_averadgePing[ms]", averagePing));
