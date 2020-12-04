@@ -42,11 +42,16 @@ class SpeedTest(Test):
 
     def __init__(self, name, tstString):
         super().__init__(name)
-
-        self.DownloadMbits = float(
-            re.search('Download: (\d*\.?\d*) Mbit/s', tstString).group(1))
-        self.UploadMbits = float(
-            re.search('Upload: (\d*\.?\d*) Mbit/s', tstString).group(1))
+        matchDownload = re.search('Download: (\d*\.?\d*) Mbit/s', tstString)
+        matchUpload = re.search('Upload: (\d*\.?\d*) Mbit/s', tstString)
+        
+        if((matchDownload is None) or (matchUpload is None)):
+            self.DownloadMbits = 0
+            self.UploadMbits = 0
+            self.Failure = True
+        else:
+            self.DownloadMbits = float(matchDownload.group(1))
+            self.UploadMbits = float(matchUpload.group(1))
 
 
 class PingTest(Test):
@@ -55,14 +60,20 @@ class PingTest(Test):
     def __init__(self, name, tstString):
         super().__init__(name)
 
-        self.PercentPacketLoss = int(
-            re.search('received, (\d*)% packet loss', tstString).group(1))
-        if(self.PercentPacketLoss != 100):
-            self.PingAvgMs = float(
-                re.search('rtt min\/avg\/max\/mdev = \d*\.?\d*\/(\d*\.?\d*)\/\d*', tstString).group(1))
-        else:
-            self.PingAvgMs = 10000.0  # Dummy Value for ping unsucessfull
+        matchPacketloss = re.search('received, (\d*)% packet loss', tstString)
+        matchAvgPing = re.search('rtt min\/avg\/max\/mdev = \d*\.?\d*\/(\d*\.?\d*)\/\d*', tstString)
 
+        if(matchPacketloss is None):
+            #raise Exception("unable to find packet loss")
+            self.PercentPacketLoss = 100
+        else:
+            self.PercentPacketLoss = int(matchPacketloss.group(1))
+
+        if(matchAvgPing is None):
+            self.PingAvgMs = 10000.0  # Dummy Value for ping unsucessfull
+        else:
+            self.PingAvgMs = float(matchAvgPing.group(1))
+            
 
 availableTestTypes = {}
 availableTestTypes[SpeedTest.CoreCommand] = lambda n, s: SpeedTest(n, s)
