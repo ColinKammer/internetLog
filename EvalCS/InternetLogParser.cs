@@ -33,6 +33,22 @@ namespace EvalCS
         }
 
 
+        struct Intervall
+        {
+            public Intervall(int start, int end)
+            {
+                Start = start;
+                End = end;
+            }
+            public int Start { get; set; }
+            public int End { get; set; }
+
+
+            public int Length
+            {
+                get { return End - Start + 1; }
+            }
+        }
 
         public InternetLogParser(in string inputText)
         {
@@ -42,15 +58,38 @@ namespace EvalCS
         public Logger Logger { get; set; } = Logger.Dummylogger;
 
 
+        string GetPositionStringFromIndex(int index)
+        {
+            var newlinesInfront = 0;
+            for (int i = 0; i < index; i++)
+            {
+                if (InputText[i] == '\n') newlinesInfront++;
+            }
+
+            var textColumn = index - InputText.LastIndexOf('\n', index);
+            return $"row {newlinesInfront} column {textColumn}";
+
+        }
+
         string GetSubstringBetween(int startIndex, in string searchPredicateFront, in string searchPredicateBack)
         {
-            int searchIndexFront = InputText.IndexOf(searchPredicateFront, startIndex, InputText.Length - startIndex);
-            if (searchIndexFront == -1) throw new Exception($"{searchIndexFront} not found");
+            return GetSubstringBetween(new Intervall(startIndex, InputText.Length - 1), searchPredicateFront, searchPredicateBack);
+        }
+        string GetSubstringBetween(in Intervall searchIntervall, in string searchPredicateFront, in string searchPredicateBack)
+        {
+            int searchIndexFront = InputText.IndexOf(searchPredicateFront, searchIntervall.Start, searchIntervall.Length);
+            if (searchIndexFront == -1)
+            {
+                return null;
+            }
 
             int substringStart = searchIndexFront + searchPredicateFront.Length;
 
-            int searchIndexBack = InputText.IndexOf(searchPredicateBack, substringStart, InputText.Length - substringStart);
-            if (searchIndexBack == -1) throw new Exception($"{searchPredicateBack} not found");
+            int searchIndexBack = InputText.IndexOf(searchPredicateBack, substringStart, searchIntervall.End - substringStart);
+            if (searchIndexBack == -1)
+            {
+                return null;
+            }
 
             return InputText.Substring(substringStart, searchIndexBack - substringStart);
         }
@@ -66,46 +105,109 @@ namespace EvalCS
         }
 
 
-        public IEnumerable<TestColumn> ParseTest(int startIndex)
+        IEnumerable<TestColumn> ParseTest(in Intervall testIndecies)
         {
-            var testName = GetSubstringBetween(startIndex, " ", ":");
-            var coreCommand = GetSubstringBetween(startIndex, ": ", " ");
+            var testName = GetSubstringBetween(testIndecies, " ", ":");
+            var coreCommand = GetSubstringBetween(testIndecies, ": ", " ");
             Logger.Log($"    Looking at Test {testName} - coreCommand: {coreCommand}");
             switch (coreCommand)
             {
                 case "./speedtest.py":
-                    return ParseSpeedtest(startIndex, testName);
+                    return ParseSpeedtest(testIndecies, testName);
                 case "ping":
-                    return ParsePing(startIndex, testName);
+                    return ParsePing(testIndecies, testName);
                 default:
                     Logger.Warning($"Core Command unkown");
                     return new List<TestColumn>();
             }
         }
 
-        public IEnumerable<TestColumn> ParseSpeedtest(int startIndex, in string testName)
+        IEnumerable<TestColumn> ParseSpeedtest(in Intervall testIndecies, in string testName)
         {
-            var pingString = GetSubstringBetween(startIndex, "Ping: ", " ms\n");
-            var downloadString = GetSubstringBetween(startIndex, "Download: ", " Mbit/s\n");
-            var uploadString = GetSubstringBetween(startIndex, "Upload: ", " Mbit/s\n");
-
             var result = new List<TestColumn>();
-            result.Add(new TestColumn($"{testName}_ping[ms]", pingString));
-            result.Add(new TestColumn($"{testName}_download[Mbit/s]", downloadString));
-            result.Add(new TestColumn($"{testName}_upload[Mbit/s]", uploadString));
+
+            var pingString = GetSubstringBetween(testIndecies, "Ping: ", " ms\n");
+            var downloadString = GetSubstringBetween(testIndecies, "Download: ", " Mbit/s\n");
+            var uploadString = GetSubstringBetween(testIndecies, "Upload: ", " Mbit/s\n");
+
+            if (pingString is null && downloadString is null && uploadString is null)
+            {
+                Logger.Warning($"Speedtest failed in {GetPositionStringFromIndex(testIndecies.Start)}");
+                return result;
+            }
+
+            if (pingString?.Length <= "1234.678".Length)
+                result.Add(new TestColumn($"{testName}_ping[ms]", pingString));
+            else
+                Logger.Warning($"Unplausable value for Ping: {pingString}");
+
+            if (downloadString?.Length <= "1234.678".Length)
+                result.Add(new TestColumn($"{testName}_download[Mbit/s]", downloadString));
+            else
+                Logger.Warning($"Unplausable value for DownloadSpeed: {downloadString}");
+
+
+            if (uploadString?.Length <= "1234.678".Length)
+                result.Add(new TestColumn($"{testName}_upload[Mbit/s]", uploadString));
+            else
+                Logger.Warning($"Unplausable value for UploadSpeed: {uploadString}");
+
+
             return result;
         }
 
-        public IEnumerable<TestColumn> ParsePing(int startIndex, in string testName)
+        IEnumerable<TestColumn> ParsePing(in Intervall testIndecies, in string testName)
         {
-            var packetLossString = GetSubstringBetween(startIndex, "received, ", "% packet loss");
-            //todo take care of unsucessful pings
-            var pingString = GetSubstringBetween(startIndex, "min/avg/max/mdev = ", " ms");
-            var averagePing = pingString.Split('/').ElementAt(1);
-
             var result = new List<TestColumn>();
-            result.Add(new TestColumn($"{testName}_packetLoss[%]", packetLossString));
-            result.Add(new TestColumn($"{testName}_averadgePing[ms]", averagePing));
+
+            var packetLossString = GetSubstringBetween(testIndecies, "received, ", "% packet loss");
+            if (packetLossString is null)
+            {
+                Logger.Warning($"Unable to find \"received, \" or \" % packet loss\" " +
+                        $"between {GetPositionStringFromIndex(testIndecies.Start)} " +
+                        $"and {GetPositionStringFromIndex(testIndecies.End)}"
+                );
+                return result;
+
+            }
+
+            if (packetLossString.Length <= "100".Length)
+            {
+                result.Add(new TestColumn($"{testName}_packetLoss[%]", packetLossString));
+                if (packetLossString == "100")
+                {
+                    return result;
+                }
+            }
+            else if (packetLossString.Contains("errors"))
+            {
+                packetLossString = GetSubstringBetween(testIndecies, "errors ", "% packet loss");
+                result.Add(new TestColumn($"{testName}_packetLoss[%]", packetLossString));
+                return result;
+            }
+            else
+            {
+                Logger.Error($"Unplausable value for Packetloss: {packetLossString}");
+            }
+
+            var pingString = GetSubstringBetween(testIndecies, "min/avg/max/mdev = ", " ms");
+            if (pingString is null)
+            {
+                Logger.Error($"Unable to find \"min/avg/max/mdev = \" or \" ms\" " +
+                    $"between {GetPositionStringFromIndex(testIndecies.Start)} " +
+                    $"and {GetPositionStringFromIndex(testIndecies.End)}"
+                );
+                return result;
+            }
+            if (pingString.Length <= "0.2345/7.899/2.345/7.89012".Length)
+            {
+                var averagePing = pingString.Split('/').ElementAt(1);
+                result.Add(new TestColumn($"{testName}_averadgePing[ms]", averagePing));
+            }
+            else
+            {
+                Logger.Warning($"Unplausable value for PingString: {pingString}");
+            }
             return result;
         }
 
@@ -129,7 +231,8 @@ namespace EvalCS
                 {
                     int nextTestStart = FindStartOfNextTest(currentTestStart + 1);
 
-                    currentTestColumns.AddRange(ParseTest(currentTestStart));
+                    var currentTestIndecies = new Intervall(currentTestStart, nextTestStart - 1);
+                    currentTestColumns.AddRange(ParseTest(currentTestIndecies));
 
                     currentTestStart = nextTestStart;
                 } while (currentTestStart < nextDatapointStart);
