@@ -1,6 +1,4 @@
-﻿using Antlr4.Runtime;
-//using AntlrInternetLogParser;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -31,7 +29,7 @@ namespace EvalCS
             var concentratedResult = new ConcentatedResult(parsedLog);
 
             var csv = concentratedResult.ToCsv(';', '\n');
-            File.WriteAllText("out.csv", csv);
+            File.WriteAllText("out.csv", csv); //Todo: use console parameter
 
             Console.WriteLine("DONE - PRESS ANY KEY");
             Console.ReadKey();

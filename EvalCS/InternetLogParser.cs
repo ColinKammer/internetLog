@@ -41,8 +41,6 @@ namespace EvalCS
         public string InputText { get; }
         public Logger Logger { get; set; } = Logger.Dummylogger;
 
-        //string GetSubstringAfter(int startIndex, in string searchPredicate, int substringLength)
-
 
         string GetSubstringBetween(int startIndex, in string searchPredicateFront, in string searchPredicateBack)
         {
@@ -100,8 +98,15 @@ namespace EvalCS
 
         public IEnumerable<TestColumn> ParsePing(int startIndex, in string testName)
         {
-            //todo
-            return new List<TestColumn>();
+            var packetLossString = GetSubstringBetween(startIndex, "received, ", "% packet loss");
+            //todo take care of unsucessful pings
+            var pingString = GetSubstringBetween(startIndex, "min/avg/max/mdev = ", " ms");
+            var averagePing = pingString.Split('/').ElementAt(1);
+
+            var result = new List<TestColumn>();
+            result.Add(new TestColumn($"{testName}_packetLoss[%]", packetLossString));
+            result.Add(new TestColumn($"{testName}_averadgePing[ms]", averagePing));
+            return result;
         }
 
 
