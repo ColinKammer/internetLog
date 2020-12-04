@@ -1,7 +1,8 @@
 ﻿using Antlr4.Runtime;
-using AntlrInternetLogParser;
+//using AntlrInternetLogParser;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,16 +16,25 @@ namespace EvalCS
 
         static void Main(string[] args)
         {
+            Logger logger = new Logger(
+                log: x => Debug.WriteLine(x),
+                warning: x => Console.WriteLine("WARNING: " + x),
+                error: x => Console.WriteLine("SOFTERROR: " + x)
+                );
+
             var logString = File.ReadAllText("results.txt"); //Todo: use console parameter
 
-            var inputStream = new AntlrInputStream(logString);
-            var lexer = new InternetLogLexer(inputStream);
-            var tokenStream = new CommonTokenStream(lexer);
-            var parser = new InternetLogParser(tokenStream);
-            var parsedLog = parser.file();
+            var parser = new InternetLogParser(logString);
+            parser.Logger = logger;
+            var parsedLog = parser.Parse();
 
             var concentratedResult = new ConcentatedResult(parsedLog);
 
+            var csv = concentratedResult.ToCsv(';', '\n');
+            File.WriteAllText("out.csv", csv);
+
+            Console.WriteLine("DONE - PRESS ANY KEY");
+            Console.ReadKey();
         }
     }
 }
