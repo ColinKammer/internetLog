@@ -39,10 +39,11 @@ def main():
         packetLoss = scipy.signal.medfilt(packetLoss, 3)
 
 
-    plt.plot(timeStamps, downloadSpeeds, 'b')
-    plt.plot(timeStamps, uploadSpeeds, 'g')
-    plt.plot(timeStamps, pingTimes, 'y')
-    plt.plot(timeStamps, packetLoss, 'r')
+    plt.plot(timeStamps, downloadSpeeds, 'b', label='downloadSpeed[Mbit/s]')
+    plt.plot(timeStamps, uploadSpeeds, 'g', label='uploadSpeed[Mbit/s]')
+    plt.plot(timeStamps, pingTimes, 'y', label='averagePing[ms]')
+    plt.plot(timeStamps, packetLoss, 'r', label='averagePacketloss[%]')
+    plt.legend(loc='upper left')
     plt.show()
 
 
