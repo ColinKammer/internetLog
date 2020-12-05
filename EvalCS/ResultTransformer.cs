@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace EvalCS
 {
-    class ConcentatedResult
+    class ResultTransformer
     {
         public Logger Logger { get; set; }
 
@@ -14,7 +14,7 @@ namespace EvalCS
 
         public List<InternetLogParser.Datapoint> ParsedLog { get; }
 
-        public ConcentatedResult(List<InternetLogParser.Datapoint> parsedLog, Logger logger = null)
+        public ResultTransformer(List<InternetLogParser.Datapoint> parsedLog, Logger logger = null)
         {
             if (logger is null) logger = Logger.Dummylogger;
             Logger = logger;

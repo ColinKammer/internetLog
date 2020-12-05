@@ -26,7 +26,7 @@ namespace EvalCS
             parser.Logger = logger;
             var parsedLog = parser.Parse();
 
-            var concentratedResult = new ConcentatedResult(parsedLog);
+            var concentratedResult = new ResultTransformer(parsedLog);
 
             var csv = concentratedResult.ToCsv(';', '\n');
             File.WriteAllText("out.csv", csv); //Todo: use console parameter

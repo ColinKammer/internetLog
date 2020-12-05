@@ -7,4 +7,6 @@ __pycache__
 
 
 results.txt
+out.csv
+out.json
 speedtest.py
