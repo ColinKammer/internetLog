@@ -9,6 +9,11 @@ import csvTable
 TIMESTAMP_FORMAT = '%d.%m.%Y %H:%M:%S'
 
 
+def averageNonNan(data, axis):
+    masked_data = np.ma.masked_array(data, np.isnan(data))
+    return np.ma.average(masked_data, axis=axis)
+
+
 def main():
     filterGraphs = True
 
@@ -22,12 +27,12 @@ def main():
     downloadSpeeds = csv.GetColumnByName('Speedtest_download[Mbit/s]')
     uploadSpeeds = csv.GetColumnByName('Speedtest_upload[Mbit/s]')
 
-    pingTimes = np.average(
+    pingTimes = averageNonNan(
         csv.GetColumnsByName(lambda colName: "averadgePing[ms]" in colName),
         axis=0
     )
 
-    packetLoss = np.average(
+    packetLoss = averageNonNan(
         csv.GetColumnsByName(lambda colName: "packetLoss[%]" in colName),
         axis=0
     )
@@ -37,7 +42,6 @@ def main():
         uploadSpeeds = scipy.signal.medfilt(uploadSpeeds, 3)
         pingTimes = scipy.signal.medfilt(pingTimes, 3)
         packetLoss = scipy.signal.medfilt(packetLoss, 3)
-
 
     plt.plot(timeStamps, downloadSpeeds, 'b', label='downloadSpeed[Mbit/s]')
     plt.plot(timeStamps, uploadSpeeds, 'g', label='uploadSpeed[Mbit/s]')

@@ -31,7 +31,7 @@ class CsvTable(object):
         ]
 
 
-def readFile(filename, newline='\n', delimiter=';', dataIsNumeric=True, defaultValue=0):
+def readFile(filename, newline='\n', delimiter=';', dataIsNumeric=True):
     with open(filename, newline=newline) as csvfile:
         reader = csv.reader(csvfile, delimiter=delimiter)
         csvList = list(reader)
@@ -49,9 +49,9 @@ def readFile(filename, newline='\n', delimiter=';', dataIsNumeric=True, defaultV
             try:
                 result.Data[dataColumn, dataRow] = float(csvValue)
             except ValueError:
-                if(dataIsNumeric == False):
-                    result.Data[dataColumn, dataRow] = csvValue
+                if(dataIsNumeric):
+                    result.Data[dataColumn, dataRow] = np.NaN
                 else:
-                    result.Data[dataColumn, dataRow] = defaultValue
+                    raise "Not Implemented"
 
     return result
