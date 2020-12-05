@@ -23,6 +23,13 @@ class CsvTable(object):
     def GetColumnByName(self, coulmnName):
         return self.Data[self.ColumnNames.index(coulmnName), :]
 
+    def GetColumnsByName(self, predicateFunc):
+        """ predicateFunc a function deciding whether this element shall be selected (string) -> bool"""
+        return self.Data[
+            [i for i, x in enumerate(self.ColumnNames) if predicateFunc(x)],
+            :
+        ]
+
 
 def readFile(filename, newline='\n', delimiter=';', dataIsNumeric=True, defaultValue=0):
     with open(filename, newline=newline) as csvfile:
