@@ -8,19 +8,13 @@ namespace EvalCS
 {
     class ResultTransformer
     {
-        public Logger Logger { get; set; }
-
-        public List<string> Columns { get; }
-
+        public Logger Logger { get; set; } = Logger.Dummylogger;
+        
         public List<InternetLogParser.Datapoint> ParsedLog { get; }
 
-        public ResultTransformer(List<InternetLogParser.Datapoint> parsedLog, Logger logger = null)
+        public ResultTransformer(List<InternetLogParser.Datapoint> parsedLog)
         {
-            if (logger is null) logger = Logger.Dummylogger;
-            Logger = logger;
-
             ParsedLog = parsedLog;
-            Columns = FindColumns(parsedLog);
         }
 
         private List<string> FindColumns(List<InternetLogParser.Datapoint> parsedLog)
@@ -44,11 +38,13 @@ namespace EvalCS
 
         public string ToCsv(char cellSperator, char lineSperator)
         {
+            var columns = FindColumns(ParsedLog);
+
             var builder = new StringBuilder();
 
             //Add Title Row
             builder.Append("Time").Append(cellSperator);
-            foreach (var columnName in Columns)
+            foreach (var columnName in columns)
                 builder.Append(columnName).Append(cellSperator);
             builder.Append(lineSperator);
 
@@ -57,7 +53,7 @@ namespace EvalCS
             {
                 //Add Line
                 builder.Append(dp.Time).Append(cellSperator);
-                foreach (var columnName in Columns)
+                foreach (var columnName in columns)
                 {
                     var matchingColumn = dp.TestColumns.FirstOrDefault(x => x.Name == columnName);
                     if (matchingColumn != null) builder.Append(matchingColumn.Value);

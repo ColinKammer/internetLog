@@ -11,7 +11,6 @@ namespace EvalCS
     class Program
     {
 
-
         static void Main(string[] args)
         {
             Logger logger = new Logger(
@@ -26,10 +25,10 @@ namespace EvalCS
             parser.Logger = logger;
             var parsedLog = parser.Parse();
 
-            var concentratedResult = new ResultTransformer(parsedLog);
+            var resultTransformer = new ResultTransformer(parsedLog);
+            resultTransformer.Logger = logger;
 
-            var csv = concentratedResult.ToCsv(';', '\n');
-            File.WriteAllText("out.csv", csv); //Todo: use console parameter
+            File.WriteAllText("out.csv", resultTransformer.ToCsv(';', '\n')); //Todo: use console parameter
 
             Console.WriteLine("DONE - PRESS ANY KEY");
             Console.ReadKey();
