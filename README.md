@@ -18,7 +18,9 @@ createDatapoint.sh must be executed regulary (e.g. by a cronjob every 10 min)
 
 #### Add the cronjob
 1. bash: crontab -e
-2. add the following line: */10 * * * * /home/pi/internetLog/createDatapoint.sh > /dev/null 2>&1 
+2. For createing a sample every 10 minutes:
+3. add the following line: */10  *  *   *   *     /home/pi/internetLog/createDatapoint.sh > /dev/null
+
 
 
 ## Evalution Facility
